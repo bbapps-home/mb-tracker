@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MB's Day">
+<title>MB's Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#1D9E75;--green-l:#E1F5EE;--green-d:#085041;
+  --blue:#378ADD;--blue-l:#E6F1FB;--blue-d:#0C447C;
+  --orange:#D85A30;--orange-l:#FAECE7;--orange-d:#712B13;
+  --amber:#BA7517;--amber-l:#FAEEDA;--amber-d:#633806;
+  --purple:#7F77DD;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-d:#085041;
+  --gray-l:#F1EFE8;--gray:#888780;
+  --text:#1a1a1a;--text-m:#6b6b6b;
+  --bg:#f7f6f2;--card:#ffffff;--border:rgba(0,0,0,0.09);
+  --r:20px;--rs:12px;--font:'Nunito',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--text);overflow:hidden;}
+#app{height:100vh;display:flex;flex-direction:column;max-width:500px;margin:0 auto;}
+.screen{display:none;flex-direction:column;height:100%;overflow-y:auto;padding:28px 20px 48px;}
+.screen.active{display:flex;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.hdr-name{font-size:30px;font-weight:900;color:var(--text);line-height:1.1;}
+.hdr-date{font-size:13px;color:var(--text-m);font-weight:600;margin-top:3px;}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:14px;border:1px solid var(--border);}
+.card-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-m);margin-bottom:14px;}
+/* Progress */
+.pts-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;}
+.pts-big{font-size:42px;font-weight:900;color:var(--text);}
+.pts-sub{font-size:14px;font-weight:700;color:var(--text-m);}
+.progress-track{background:var(--gray-l);border-radius:99px;height:14px;width:100%;margin:10px 0 6px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:99px;background:var(--green);transition:width .4s ease;}
+.tier-row{display:flex;justify-content:space-between;margin-bottom:2px;}
+.tier-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.tier-dot{width:12px;height:12px;border-radius:50%;background:var(--gray-l);border:2px solid var(--border);}
+.tier-dot.reached{background:var(--green);border-color:var(--green);}
+.tier-label{font-size:10px;font-weight:800;color:var(--text-m);text-align:center;}
+.tier-pts{font-size:10px;font-weight:700;color:var(--text-m);}
+/* Week chart */
+.week-chart{display:flex;align-items:flex-end;gap:6px;height:60px;margin-top:4px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-bg{width:100%;background:var(--gray-l);border-radius:6px;flex:1;display:flex;align-items:flex-end;overflow:hidden;}
+.bar-fill{width:100%;background:var(--green);border-radius:6px;transition:height .3s ease;}
+.bar-day{font-size:10px;font-weight:800;color:var(--text-m);}
+.bar-day.today{color:var(--blue);}
+/* Nav buttons */
+.nav-btn{width:100%;padding:16px 18px;border-radius:var(--rs);border:2px solid var(--border);background:var(--bg);font-family:var(--font);font-size:16px;font-weight:800;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;transition:transform .1s;}
+.nav-btn:last-child{margin-bottom:0;}
+.nav-btn:active{transform:scale(.97);}
+.nav-btn.green{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
+.nav-btn.blue{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d);}
+.nav-btn.purple{background:var(--purple-l);border-color:var(--purple);color:var(--purple-d);}
+.nav-btn .arr{font-size:18px;opacity:.5;}
+/* Checklist */
+.check-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-user-select:none;user-select:none;}
+.check-item:last-child{border-bottom:none;}
+.check-item.done .check-box{background:var(--green);border-color:var(--green);}
+.check-item.done .check-box::after{opacity:1;}
+.check-item.done .check-txt{color:var(--text-m);text-decoration:line-through;}
+.check-box{width:26px;height:26px;border-radius:8px;border:2px solid var(--border);background:var(--bg);flex-shrink:0;position:relative;transition:all .15s;}
+.check-box::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:900;opacity:0;transition:opacity .15s;}
+.check-txt{flex:1;font-size:15px;font-weight:700;color:var(--text);}
+.check-pts{font-size:13px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:3px 9px;border-radius:99px;white-space:nowrap;}
+.check-pts.earned{background:var(--gray-l);color:var(--gray);}
+/* Radio group for bedtime */
+.radio-group{display:flex;gap:8px;width:100%;}
+.radio-opt{flex:1;padding:10px 8px;border-radius:var(--rs);border:2px solid var(--border);background:var(--bg);font-family:var(--font);font-size:13px;font-weight:800;color:var(--text-m);cursor:pointer;text-align:center;transition:all .15s;}
+.radio-opt.selected{background:var(--green-l);border-color:var(--green);color:var(--green-d);}
+/* Earn options */
+.earn-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.earn-item:last-child{border-bottom:none;}
+.earn-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.earn-main{flex:1;}
+.earn-name{font-size:15px;font-weight:800;color:var(--text);}
+.earn-meta{font-size:12px;font-weight:600;color:var(--text-m);margin-top:2px;}
+.earn-pts-badge{font-size:13px;font-weight:800;color:var(--green-d);background:var(--green-l);padding:4px 10px;border-radius:99px;}
+/* Back */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font);font-size:15px;font-weight:700;color:var(--text-m);background:none;border:none;cursor:pointer;margin-bottom:22px;padding:0;}
+.back-btn:active{opacity:.6;}
+/* Timer */
+.timer-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);border-radius:var(--r);padding:28px 20px;border:1px solid var(--border);}
+.timer-type{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;}
+.timer-num{font-size:58px;font-weight:900;color:var(--text);letter-spacing:-2px;margin:8px 0 4px;}
+.timer-sub{font-size:13px;font-weight:700;color:var(--text-m);margin-bottom:28px;}
+/* Primary btn */
+.pri-btn{width:100%;padding:17px;border-radius:var(--rs);border:none;font-family:var(--font);font-size:17px;font-weight:800;cursor:pointer;transition:transform .1s;margin-top:10px;}
+.pri-btn:active{transform:scale(.97);}
+.pri-btn.green{background:var(--green);color:white;}
+.pri-btn.blue{background:var(--blue);color:white;}
+.pri-btn.gray{background:var(--gray-l);color:var(--text-m);}
+.pri-btn.amber{background:var(--amber);color:white;}
+/* Done */
+.done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 20px;}
+.done-icon{font-size:60px;margin-bottom:14px;}
+.done-title{font-size:28px;font-weight:900;margin-bottom:8px;}
+.done-sub{font-size:15px;font-weight:600;color:var(--text-m);margin-bottom:20px;line-height:1.5;}
+.done-pts-chip{font-size:20px;font-weight:900;color:var(--amber-d);background:var(--amber-l);padding:10px 24px;border-radius:99px;margin-bottom:28px;}
+/* Reward tiers display */
+.reward-tier{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);}
+.reward-tier:last-child{border-bottom:none;}
+.reward-badge{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.reward-name{font-size:15px;font-weight:800;color:var(--text);}
+.reward-pts{font-size:13px;font-weight:700;color:var(--text-m);margin-top:2px;}
+.reward-status{margin-left:auto;font-size:12px;font-weight:800;padding:4px 10px;border-radius:99px;}
+.reward-status.locked{background:var(--gray-l);color:var(--gray);}
+.reward-status.unlocked{background:var(--green-l);color:var(--green-d);}
+/* Parent section */
+.parent-input-row{display:flex;gap:8px;margin-bottom:10px;}
+.parent-input{flex:1;padding:12px 14px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg);font-family:var(--font);font-size:15px;font-weight:700;color:var(--text);outline:none;}
+.parent-input:focus{border-color:var(--blue);}
+.parent-input-num{width:70px;text-align:center;}
+.section-title{font-size:20px;font-weight:900;color:var(--text);margin-bottom:6px;}
+.section-sub{font-size:14px;font-weight:600;color:var(--text-m);margin-bottom:20px;}
+.bonus-history{margin-top:12px;}
+.bonus-item{font-size:13px;font-weight:600;color:var(--text-m);padding:6px 0;border-bottom:1px solid var(--border);}
+.bonus-item:last-child{border-bottom:none;}
+.bonus-home-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.bonus-home-item:last-child{border-bottom:none;}
+.bonus-home-pts{font-size:14px;font-weight:900;color:var(--amber-d);background:var(--amber-l);padding:3px 10px;border-radius:99px;white-space:nowrap;}
+.bonus-home-reason{font-size:14px;font-weight:700;color:var(--text);}
+.bonus-home-date{font-size:12px;font-weight:600;color:var(--text-m);}
+.pin-dot{width:16px;height:16px;border-radius:50%;background:var(--gray-l);border:2px solid var(--border);transition:all .15s;}
+.pin-dot.filled{background:var(--text);border-color:var(--text);}
+.pin-key{padding:16px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);font-family:var(--font);font-size:20px;font-weight:800;color:var(--text);cursor:pointer;transition:transform .1s;}
+.pin-key:active{transform:scale(.93);background:var(--gray-l);}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HOME -->
+<div class="screen active" id="home-screen">
+  <div class="hdr">
+    <div>
+      <div class="hdr-name">MB's Day</div>
+      <div class="hdr-date" id="home-date"></div>
+    </div>
+    <button class="nav-btn purple" style="width:auto;padding:10px 16px;font-size:13px;margin:0;" onclick="goScreen('pin-screen')">Parent ⚙️</button>
+  </div>
+
+  <!-- Points + Progress -->
+  <div class="card">
+    <div class="card-lbl">This week</div>
+    <div class="pts-row">
+      <div class="pts-big" id="home-pts">0</div>
+      <div class="pts-sub">points</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="tier-row" id="tier-markers"></div>
+    <div style="margin-top:14px;">
+      <div class="card-lbl" style="margin-bottom:8px;">This week's rewards</div>
+      <div id="reward-list"></div>
+    </div>
+  </div>
+
+  <!-- Week chart -->
+  <div class="card">
+    <div class="card-lbl">Your week</div>
+    <div class="week-chart" id="week-chart"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="card-lbl">Earn points</div>
+    <button class="nav-btn green" onclick="goScreen('earn-screen')">Earn time <span class="arr">→</span></button>
+    <button class="nav-btn blue" onclick="goScreen('habits-screen')">Daily habits <span class="arr" id="habits-done-count"></span></button>
+  </div>
+
+  <!-- Bonus Points -->
+  <div class="card" id="bonus-home-card" style="display:none;">
+    <div class="card-lbl">Bonus points from Mom &amp; Dad</div>
+    <div id="bonus-home-list"></div>
+  </div>
+</div>
+
+<!-- PIN SCREEN -->
+<div class="screen" id="pin-screen">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 20px;">
+    <div style="font-size:40px;margin-bottom:16px;">🔒</div>
+    <div class="section-title" style="text-align:center;margin-bottom:6px;">Parent area</div>
+    <div style="font-size:14px;font-weight:600;color:var(--text-m);margin-bottom:32px;text-align:center;">Enter your PIN to continue.</div>
+    <div id="pin-dots" style="display:flex;gap:12px;margin-bottom:28px;">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:240px;">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key" onclick="pinKey('back')" style="font-size:18px;">⌫</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key" style="background:var(--gray-l);color:var(--text-m);" onclick="goScreen('home-screen')">Cancel</button>
+    </div>
+    <div id="pin-error" style="font-size:13px;font-weight:700;color:#E24B4A;margin-top:16px;min-height:20px;"></div>
+  </div>
+</div>
+
+<!-- EARN TIME -->
+<div class="screen" id="earn-screen">
+  <button class="back-btn" onclick="goScreen('home-screen')">← Back</button>
+  <div class="section-title">Earn time</div>
+  <div class="section-sub">Pick what you're doing and start the timer.</div>
+  <div class="card" id="earn-list"></div>
+</div>
+
+<!-- DAILY HABITS -->
+<div class="screen" id="habits-screen">
+  <button class="back-btn" onclick="goScreen('home-screen')">← Back</button>
+  <div class="section-title">Daily habits</div>
+  <div class="section-sub">Check off what you've done today.</div>
+  <div class="card" id="habits-list"></div>
+</div>
+
+<!-- TIMER -->
+<div class="screen" id="timer-screen">
+  <button class="back-btn" onclick="cancelTimer()">← Cancel</button>
+  <div class="timer-card">
+    <div class="timer-type" id="timer-type-lbl" style="color:var(--green);">Earn time</div>
+    <svg width="180" height="180" viewBox="0 0 180 180">
+      <circle cx="90" cy="90" r="78" fill="none" stroke="#f0ede6" stroke-width="10"/>
+      <circle id="ring" cx="90" cy="90" r="78" fill="none" stroke="#1D9E75" stroke-width="10"
+        stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="0"
+        transform="rotate(-90 90 90)"/>
+    </svg>
+    <div class="timer-num" id="timer-disp">15:00</div>
+    <div class="timer-sub" id="timer-sub">minutes left</div>
+    <button class="pri-btn gray" id="pause-btn" onclick="togglePause()" style="margin-top:0;">Pause</button>
+  </div>
+</div>
+
+<!-- DONE -->
+<div class="screen" id="done-screen">
+  <div class="done-wrap">
+    <div class="done-icon" id="done-icon">🌟</div>
+    <div class="done-title" id="done-title">Done!</div>
+    <div class="done-sub" id="done-sub">Nice work.</div>
+    <div class="done-pts-chip" id="done-pts">+10 points</div>
+    <button class="pri-btn green" style="max-width:300px;" onclick="goScreen('home-screen')">Back to my day</button>
+  </div>
+</div>
+
+<!-- TEACH DONE -->
+<div class="screen" id="teach-screen">
+  <div class="done-wrap">
+    <div class="done-icon">🗣️</div>
+    <div class="done-title">That's awesome!</div>
+    <div class="done-sub">Teaching someone something is one of the best ways to really know it. +5 points!</div>
+    <div class="done-pts-chip">+5 points</div>
+    <button class="pri-btn green" style="max-width:300px;" onclick="goScreen('home-screen')">Back to my day</button>
+  </div>
+</div>
+
+<!-- PARENT -->
+<div class="screen" id="parent-screen">
+  <button class="back-btn" onclick="goScreen('home-screen')">← Back</button>
+  <div class="section-title">Parent settings</div>
+  <div class="section-sub">Update goals, add bonus points, and edit rewards.</div>
+
+  <!-- Bonus points -->
+  <div class="card">
+    <div class="card-lbl">Give bonus points</div>
+    <div class="parent-input-row">
+      <input class="parent-input" id="bonus-reason" placeholder="Reason (e.g. great attitude)" type="text"/>
+      <input class="parent-input parent-input-num" id="bonus-pts" placeholder="Pts" type="number" min="1" max="50"/>
+    </div>
+    <button class="pri-btn amber" onclick="addBonus()">Add bonus points</button>
+    <div class="bonus-history" id="bonus-history"></div>
+  </div>
+
+  <!-- Edit rewards -->
+  <div class="card">
+    <div class="card-lbl">Weekly rewards</div>
+    <div id="reward-edit-list"></div>
+    <button class="pri-btn green" style="margin-top:10px;" onclick="saveRewards()">Save rewards</button>
+  </div>
+
+  <!-- Reset week -->
+  <div class="card">
+    <div class="card-lbl">Week reset</div>
+    <div style="font-size:14px;font-weight:600;color:var(--text-m);margin-bottom:12px;">Reset points and habits at the start of each week. Do this every Sunday.</div>
+    <button class="pri-btn gray" onclick="confirmReset()">Reset for new week</button>
+  </div>
+</div>
+
+</div><!-- end app -->
+
+<script>
+var EARN_ITEMS = [
+  {id:'hw', name:'Homework', icon:'📚', mins:15, pts:8, color:'#E6F1FB', iconBg:'#B5D4F4'},
+  {id:'read', name:'Reading', icon:'📖', mins:20, pts:10, color:'#E1F5EE', iconBg:'#9FE1CB'},
+  {id:'audio', name:'Audiobook', icon:'🎧', mins:20, pts:10, color:'#EEEDFE', iconBg:'#CECBF6'},
+  {id:'yt', name:'YouTube Research', icon:'🔬', mins:45, pts:10, color:'#E1F5EE', iconBg:'#9FE1CB'},
+  {id:'doc', name:'Watch Documentary', icon:'🎬', mins:45, pts:10, color:'#FAECE7', iconBg:'#F5C4B3'},
+  {id:'mc', name:'Minecraft Project', icon:'🟩', mins:45, pts:10, color:'#E1F5EE', iconBg:'#9FE1CB'},
+  {id:'teach', name:'Teach Mom or Dad Something', icon:'🗣️', mins:0, pts:5, color:'#FAEEDA', iconBg:'#FAC775'},
+];
+
+var DEFAULT_HABITS = [
+  {id:'teeth_am', name:'Brush Teeth — Morning', pts:2},
+  {id:'teeth_pm', name:'Brush Teeth — Night', pts:2},
+  {id:'bed_make', name:'Make Bed', pts:2},
+  {id:'up', name:'Out of Bed by 7:45', pts:5},
+  {id:'ontime', name:'On Time for Activity', pts:5},
+  {id:'pack', name:'Pack Backpack', pts:2},
+  {id:'trash', name:'Take Out Kitchen Trash', pts:2},
+  {id:'shower', name:'Shower', pts:5},
+  {id:'bed_930', name:'In Bed by 9:30', pts:2, bedtime:true},
+  {id:'bed_900', name:'In Bed by 9:00', pts:5, bedtime:true},
+];
+
+var DEFAULT_REWARDS = [
+  {id:'r1', name:'Go out for ice cream', pts:75, icon:'🍦'},
+  {id:'r2', name:'One hour at Simsbury Farms', pts:125, icon:'🌳'},
+  {id:'r3', name:'Extra 30 min Minecraft this weekend', pts:175, icon:'🟩'},
+];
+
+var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function defaultState() {
+  return {
+    weekPts: 0,
+    dailyPts: [0,0,0,0,0,0,0],
+    habits: {},
+    teachDone: false,
+    bonuses: [],
+    rewards: JSON.parse(JSON.stringify(DEFAULT_REWARDS)),
+    weekStart: getWeekStart(),
+    version: 2
+  };
+}
+
+var S = defaultState();
+var timerType = null, timerTotal = 0, timerLeft = 0, timerInterval = null, paused = false;
+var todayIdx = new Date().getDay();
+
+function getWeekStart() {
+  var d = new Date();
+  var day = d.getDay();
+  var diff = d.getDate() - day;
+  var mon = new Date(d.setDate(diff));
+  return mon.toDateString();
+}
+
+function save() { try { localStorage.setItem('mb_v2', JSON.stringify(S)); } catch(e){} }
+function load() {
+  try {
+    var raw = localStorage.getItem('mb_v2');
+    if (raw) {
+      var saved = JSON.parse(raw);
+      if (saved.version === 2) S = saved;
+    }
+  } catch(e){}
+}
+
+function addPts(n) {
+  S.weekPts += n;
+  if (!S.dailyPts) S.dailyPts = [0,0,0,0,0,0,0];
+  S.dailyPts[todayIdx] = (S.dailyPts[todayIdx] || 0) + n;
+  save();
+  refreshHome();
+}
+
+function refreshHome() {
+  document.getElementById('home-pts').textContent = S.weekPts;
+  document.getElementById('home-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  var maxPts = S.rewards[S.rewards.length-1].pts;
+  var pct = Math.min(100, Math.round(S.weekPts / maxPts * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  renderTierMarkers();
+  renderRewardList();
+  renderWeekChart();
+  renderHabitsDoneCount();
+  renderBonusHome();
+}
+
+function renderTierMarkers() {
+  var el = document.getElementById('tier-markers');
+  var maxPts = S.rewards[S.rewards.length-1].pts;
+  el.innerHTML = '';
+  S.rewards.forEach(function(r) {
+    var div = document.createElement('div');
+    div.className = 'tier-item';
+    var dot = document.createElement('div');
+    dot.className = 'tier-dot' + (S.weekPts >= r.pts ? ' reached' : '');
+    var lbl = document.createElement('div');
+    lbl.className = 'tier-label';
+    lbl.textContent = r.icon;
+    var pts = document.createElement('div');
+    pts.className = 'tier-pts';
+    pts.textContent = r.pts + ' pts';
+    div.appendChild(dot);
+    div.appendChild(lbl);
+    div.appendChild(pts);
+    el.appendChild(div);
+  });
+}
+
+function renderRewardList() {
+  var el = document.getElementById('reward-list');
+  el.innerHTML = '';
+  S.rewards.forEach(function(r) {
+    var div = document.createElement('div');
+    div.className = 'reward-tier';
+    var unlocked = S.weekPts >= r.pts;
+    div.innerHTML = '<div class="reward-badge" style="background:'+(unlocked?'#E1F5EE':'#F1EFE8')+'">' + r.icon + '</div>' +
+      '<div><div class="reward-name">' + r.name + '</div><div class="reward-pts">' + r.pts + ' points</div></div>' +
+      '<div class="reward-status ' + (unlocked ? 'unlocked' : 'locked') + '">' + (unlocked ? '✓ Earned!' : r.pts - S.weekPts + ' to go') + '</div>';
+    el.appendChild(div);
+  });
+}
+
+function renderWeekChart() {
+  var el = document.getElementById('week-chart');
+  el.innerHTML = '';
+  var max = Math.max(1, Math.max.apply(null, S.dailyPts));
+  for (var i = 0; i < 7; i++) {
+    var pts = S.dailyPts[i] || 0;
+    var pct = Math.round(pts / max * 100);
+    var wrap = document.createElement('div');
+    wrap.className = 'bar-wrap';
+    wrap.innerHTML = '<div class="bar-bg"><div class="bar-fill" style="height:' + pct + '%"></div></div>' +
+      '<div class="bar-day' + (i===todayIdx?' today':'') + '">' + DAYS[i] + '</div>';
+    el.appendChild(wrap);
+  }
+}
+
+function renderHabitsDoneCount() {
+  var done = Object.keys(S.habits).filter(function(k){ return S.habits[k]; }).length;
+  var total = DEFAULT_HABITS.length - 1;
+  var el = document.getElementById('habits-done-count');
+  el.textContent = done > 0 ? done + ' done →' : '→';
+}
+
+function renderEarnList() {
+  var el = document.getElementById('earn-list');
+  el.innerHTML = '';
+  EARN_ITEMS.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'earn-item';
+    div.onclick = (function(it){ return function(){ startEarn(it); }; })(item);
+    var metaTxt = it => it.mins > 0 ? it.mins + ' min timer · ' + it.pts + ' pts' : 'Tap to complete · ' + it.pts + ' pts';
+    div.innerHTML = '<div class="earn-icon" style="background:' + item.color + '">' + item.icon + '</div>' +
+      '<div class="earn-main"><div class="earn-name">' + item.name + '</div><div class="earn-meta">' + metaTxt(item) + '</div></div>' +
+      '<div class="earn-pts-badge">+' + item.pts + '</div>';
+    el.appendChild(div);
+  });
+}
+
+function startEarn(item) {
+  if (item.id === 'teach') {
+    if (S.teachDone) { alert("You already taught something today! Come back tomorrow."); return; }
+    S.teachDone = true;
+    addPts(item.pts);
+    save();
+    goScreen('teach-screen');
+    return;
+  }
+  timerType = 'earn';
+  timerTotal = item.mins * 60;
+  timerLeft = item.mins * 60;
+  paused = false;
+  window._currentEarnItem = item;
+  document.getElementById('timer-type-lbl').textContent = item.name;
+  document.getElementById('timer-type-lbl').style.color = 'var(--green)';
+  document.getElementById('ring').setAttribute('stroke','#1D9E75');
+  document.getElementById('pause-btn').textContent = 'Pause';
+  updateTimerDisp();
+  goScreen('timer-screen');
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function(){
+    if (!paused) {
+      timerLeft--;
+      updateTimerDisp();
+      if (timerLeft <= 0) { clearInterval(timerInterval); finishTimer(); }
+    }
+  }, 1000);
+}
+
+function updateTimerDisp() {
+  var m = Math.floor(timerLeft/60), s = timerLeft%60;
+  document.getElementById('timer-disp').textContent = m + ':' + (s<10?'0':'') + s;
+  var pct = timerLeft / timerTotal;
+  var circ = 490;
+  document.getElementById('ring').setAttribute('stroke-dashoffset', Math.round(circ - circ*pct));
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pause-btn').textContent = paused ? 'Resume' : 'Pause';
+}
+
+function cancelTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  goScreen('earn-screen');
+}
+
+function finishTimer() {
+  var item = window._currentEarnItem;
+  var icons = {hw:'📚',read:'📖',audio:'🎧',yt:'🔬',doc:'🎬',mc:'🟩'};
+  var msgs = {
+    hw:'Homework done. That took focus — good work.',
+    read:'Reading done. Your brain just got stronger.',
+    audio:'Audiobook session done. Nice.',
+    yt:'Research session done. What did you learn?',
+    doc:'Documentary done. Good watch.',
+    mc:'Minecraft session done. What did you build?'
+  };
+  document.getElementById('done-icon').textContent = icons[item.id] || '🌟';
+  document.getElementById('done-title').textContent = 'Done!';
+  document.getElementById('done-sub').textContent = msgs[item.id] || 'Great work.';
+  document.getElementById('done-pts').textContent = '+' + item.pts + ' points';
+  addPts(item.pts);
+  goScreen('done-screen');
+}
+
+function renderHabitsList() {
+  var el = document.getElementById('habits-list');
+  el.innerHTML = '';
+  var bedDone = S.habits['bed_900'] || S.habits['bed_930'];
+
+  DEFAULT_HABITS.forEach(function(h) {
+    if (h.bedtime) {
+      return;
+    }
+    var done = !!S.habits[h.id];
+    var div = document.createElement('div');
+    div.className = 'check-item' + (done ? ' done' : '');
+    div.onclick = (function(hh){ return function(){ toggleHabit(hh.id, hh.pts); }; })(h);
+    div.innerHTML = '<div class="check-box"></div>' +
+      '<div class="check-txt">' + h.name + '</div>' +
+      '<div class="check-pts' + (done?' earned':'') + '">+' + h.pts + '</div>';
+    el.appendChild(div);
+  });
+
+  // Bedtime radio
+  var bedDiv = document.createElement('div');
+  bedDiv.style.padding = '12px 0';
+  bedDiv.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--text-m);margin-bottom:10px;">BEDTIME</div>' +
+    '<div class="radio-group">' +
+    '<div class="radio-opt' + (S.habits['bed_900']?' selected':'') + '" onclick="selectBedtime(\'bed_900\',5)">In Bed by 9:00<br><span style="font-size:11px;">+5 pts</span></div>' +
+    '<div class="radio-opt' + (S.habits['bed_930']?' selected':'') + '" onclick="selectBedtime(\'bed_930\',2)">In Bed by 9:30<br><span style="font-size:11px;">+2 pts</span></div>' +
+    '</div>';
+  el.appendChild(bedDiv);
+}
+
+function toggleHabit(id, pts) {
+  if (S.habits[id]) {
+    S.habits[id] = false;
+    addPts(-pts);
+  } else {
+    S.habits[id] = true;
+    addPts(pts);
+  }
+  save();
+  renderHabitsList();
+}
+
+function selectBedtime(id, pts) {
+  var other = id === 'bed_900' ? 'bed_930' : 'bed_900';
+  var otherPts = id === 'bed_900' ? 2 : 5;
+  if (S.habits[id]) {
+    S.habits[id] = false;
+    addPts(-pts);
+  } else {
+    if (S.habits[other]) { S.habits[other] = false; addPts(-otherPts); }
+    S.habits[id] = true;
+    addPts(pts);
+  }
+  save();
+  renderHabitsList();
+}
+
+// Parent section
+function renderParentSection() {
+  renderRewardEdit();
+  renderBonusHistory();
+}
+
+function renderRewardEdit() {
+  var el = document.getElementById('reward-edit-list');
+  el.innerHTML = '';
+  S.rewards.forEach(function(r, i) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:10px;';
+    row.innerHTML = '<div style="font-size:20px;width:30px;">' + r.icon + '</div>' +
+      '<input class="parent-input" style="flex:1;" value="' + r.name + '" id="rew-name-'+i+'" placeholder="Reward name"/>' +
+      '<input class="parent-input parent-input-num" value="' + r.pts + '" id="rew-pts-'+i+'" type="number" min="1"/>';
+    el.appendChild(row);
+  });
+}
+
+function saveRewards() {
+  S.rewards.forEach(function(r, i) {
+    var nameEl = document.getElementById('rew-name-'+i);
+    var ptsEl = document.getElementById('rew-pts-'+i);
+    if (nameEl) r.name = nameEl.value;
+    if (ptsEl) r.pts = parseInt(ptsEl.value) || r.pts;
+  });
+  save();
+  refreshHome();
+  alert('Rewards saved!');
+}
+
+function addBonus() {
+  var reason = document.getElementById('bonus-reason').value.trim();
+  var pts = parseInt(document.getElementById('bonus-pts').value);
+  if (!reason || !pts || pts < 1) { alert('Add a reason and point amount.'); return; }
+  S.bonuses = S.bonuses || [];
+  S.bonuses.unshift({reason: reason, pts: pts, date: new Date().toLocaleDateString()});
+  addPts(pts);
+  document.getElementById('bonus-reason').value = '';
+  document.getElementById('bonus-pts').value = '';
+  renderBonusHistory();
+  renderBonusHome();
+  alert('✓ ' + pts + ' bonus points added for: ' + reason);
+}
+
+function renderBonusHistory() {
+  var el = document.getElementById('bonus-history');
+  S.bonuses = S.bonuses || [];
+  if (S.bonuses.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="card-lbl" style="margin-top:14px;margin-bottom:8px;">Recent bonuses</div>';
+  S.bonuses.slice(0,5).forEach(function(b) {
+    var div = document.createElement('div');
+    div.className = 'bonus-item';
+    div.textContent = b.date + ' · +' + b.pts + ' pts · ' + b.reason;
+    el.appendChild(div);
+  });
+}
+
+function confirmReset() {
+  if (confirm('Reset all points and habits for the new week? This cannot be undone.')) {
+    S.weekPts = 0;
+    S.dailyPts = [0,0,0,0,0,0,0];
+    S.habits = {};
+    S.teachDone = false;
+    S.bonuses = [];
+    S.weekStart = getWeekStart();
+    save();
+    refreshHome();
+    alert('New week started! Good luck MB.');
+    goScreen('home-screen');
+  }
+}
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if (id==='earn-screen') renderEarnList();
+  if (id==='habits-screen') renderHabitsList();
+  if (id==='parent-screen') renderParentSection();
+  if (id==='pin-screen') resetPin();
+}
+
+var PIN = '0628';
+var pinEntry = '';
+
+function resetPin() {
+  pinEntry = '';
+  document.getElementById('pin-error').textContent = '';
+  updatePinDots();
+}
+
+function updatePinDots() {
+  var dots = document.querySelectorAll('.pin-dot');
+  dots.forEach(function(d, i){ d.className = 'pin-dot' + (i < pinEntry.length ? ' filled' : ''); });
+}
+
+function pinKey(k) {
+  if (k === 'back') {
+    pinEntry = pinEntry.slice(0,-1);
+    updatePinDots();
+    return;
+  }
+  if (pinEntry.length >= 4) return;
+  pinEntry += k;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    if (pinEntry === PIN) {
+      pinEntry = '';
+      updatePinDots();
+      goScreen('parent-screen');
+    } else {
+      document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+      setTimeout(function(){ pinEntry=''; updatePinDots(); document.getElementById('pin-error').textContent=''; }, 1000);
+    }
+  }
+}
+
+function renderBonusHome() {
+  var card = document.getElementById('bonus-home-card');
+  var list = document.getElementById('bonus-home-list');
+  S.bonuses = S.bonuses || [];
+  if (S.bonuses.length === 0) { card.style.display='none'; return; }
+  card.style.display='block';
+  list.innerHTML = '';
+  S.bonuses.slice(0,10).forEach(function(b) {
+    var div = document.createElement('div');
+    div.className = 'bonus-home-item';
+    div.innerHTML = '<div class="bonus-home-pts">+' + b.pts + ' pts</div>' +
+      '<div><div class="bonus-home-reason">' + b.reason + '</div><div class="bonus-home-date">' + b.date + '</div></div>';
+    list.appendChild(div);
+  });
+}
+
+load();
+refreshHome();
+</script>
+</body>
+</html>
